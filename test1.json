@@ -1,0 +1,6 @@
+{"index":{"_index":"itest2", "_id":"1"}}
+{"msg":"안녕", "name":"kim", "age":20}
+{"index":{"_index":"itest2", "_id":"2"}}
+{"msg":"그래", "name":"lee", "age":21}
+{"index":{"_index":"itest2", "_id":"3"}}
+{"msg":"반가워", "name":"park", "age":22}

@@ -1,0 +1,199 @@
+elk 실행 확인
+http://localhost:9200/
+
+키바나 실행 확인
+http://localhost:5601/
+
+1. INDEX 만들기
+PUT classes
+
+2. INDEX 조회
+GET classes
+
+3. INDEX 삭제
+DELETE classes
+
+4. 문서 생성 : [표현법] POST/인덱스명/_doc/id
+POST classes/_doc/1
+{
+  "name":"gildong",
+  "msg":"hello"
+}
+
+5. 문서 생성 확인
+GET classes/_doc/1
+
+6. id를 넣지 않고 생성 : id를 자동으로 생성 ( 문자 + 숫자 )
+POST classes/_doc
+{
+  "name":"sejin",
+  "msg":"newMsg"
+}
+
+7. 문서에 필드 추가(만약 기존에 있는 필드이면 값만 업데이트)
+   [표현법] POST/인덱스명/_update/id
+          {
+            "doc:{
+              키 : 값
+            }
+          }
+
+  POST classes/_update/1
+  {
+    "doc":{
+      "msg":"안녕"
+    }
+  }
+
+  POST classes/_update/1
+  {
+    "doc":{
+      "num1": 1
+    }
+  }
+
+8.script를 이용한 값 변경
+POST classes/_update/1
+{
+  "script":{
+    "source" : "ctx._source.num1 += params.value",
+    "params" : {
+      "value" : 3
+    }
+  }
+}
+
+9. _bulk : 한꺼번에 많은 items를 넣을 때
+POST _bulk
+{"index":{"_index":"itest", "_id":"1"}}
+{"msg":"안녕", "name":"kim", "age":20}
+{"index":{"_index":"itest", "_id":"2"}}
+{"msg":"그래", "name":"lee", "age":21}
+{"index":{"_index":"itest", "_id":"3"}}
+{"msg":"반가워", "name":"park", "age":22}
+
+-> 파일로 index를 만들 때 
+POST _bulk
+
+10. 본문 데이터 검색
+- term : 완전일치 검색
+GET basketball/_search
+{
+  "query" : {
+    "term" : {
+      "points":32
+    }
+  }
+}
+
+- match : 단어가 포함되어있으면 검색
+GET basketball/_search
+{
+  "query" : {
+    "match" : {
+      "team":"states"
+    }
+  }
+}
+
++ match에서 공백은 or를 의미 
+GET basketball/_search
+{
+  "query" : {
+    "match" : {
+      "team":"states jazz"
+    }
+  }
+}
+
++ match에서 and로 검색 : 공백 중간이나 앞, 뒤에 다른 단어가 와도 된다. 
+GET basketball/_search
+{
+  "query" : {
+    "match" : {
+      "team":{
+        "query" : "states jazz",
+        "operator" : "and"
+      }
+    }
+  }
+}
+
+- match_phrase : 제시한 검색어는 정확히 일치, 앞이나 뒤에 다른 단어가 와도 된다. 
+GET basketball/_search
+{
+  "query" : {
+    "match_phrase" : {
+      "team": "States Warriors"
+    }
+  }
+}
+
+-> slop 옵션 : 값의 공백사이의 단어가 n개 이하의 단어가 들어와도 됨 
+GET basketball/_search
+{
+  "query" : {
+    "match_phrase" : {
+      "team": {
+        "query":"States Warriors",
+        "slop":1
+      }
+    }
+  }
+}
+
+- query_string : 여러 개의 검색 사용가능
+GET basketball/_search{
+    "query":{
+        "query_string":{
+            "default_field":"team", 
+            "query": "(Golden AND jazz) OR \"Golden Warriors\""
+        }
+    }
+}
+
+- Bool query : 여러 쿼리를 조합하여 사용 가능 
+               4개의 인자를 가지고 있음
+        - must : 쿼리가 참인 문서들을 검색
+        - must_not : 쿼리가 거짓인 문서들을 검색
+        - should : 검색 결과 중 이 쿼리에 해당하는 문서들의 score를 높여줌
+        - filter : 쿼리가 참인 문서를 검색하지만, score를 계산하지 않음
+                   must보다 검색 속도가 빠르다
+ 
+ [사용법]
+ GET 인덱스명/_search
+ {
+    "query":{
+        "bool":{
+            "must":[
+                { 쿼리 }, ... 
+            ],
+            "must_not":[
+            { 쿼리 }, ...
+            ],
+            "should":[
+                { 쿼리 }, ...
+            ],
+            "filter":[
+                { 쿼리 }, ...
+            ]
+        }
+    }
+ }
+
+ GET basketball/_search
+ {
+    "query":{
+        "bool":{
+            "must": [
+                {"match" : {"team" : "jazz"}},
+                {"match_phrase" : {"team" : "Golden States"}}
+            ]
+        }
+    }
+ }
+
+
+
+curl -H "Content-Type : application/json" -Xpost localhost:9200/classes/_doc/2 -d "{""name"":""newName"", ""msg"":""kkk""}"
+
